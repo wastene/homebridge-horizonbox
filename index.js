@@ -15,6 +15,8 @@ function HorizonAccessory(log,config){
 	this.config = config;
 	this.name = config['name'] || "HorizonBox";
 	this.ip = config['ip'] || "192.168.178.62";
+	this.key = config['key'];
+
 
 	this.service = new Service.Switch(this.name);
 
@@ -32,7 +34,6 @@ function HorizonAccessory(log,config){
 			}	
 		});
 	}.bind(this);
-
 };
 
 HorizonAccessory.prototype.getServices = function(){
@@ -40,76 +41,106 @@ HorizonAccessory.prototype.getServices = function(){
 };
 
 HorizonAccessory.prototype.getOn = function(callback){
-	var accessory = this;
-	accessory.isActive(function(on){
-		callback(null, on);
-	});
+	if(this.key === undefined){
+		this.isActive(function(on){
+			callback(null, on);
+		});
+	}else {
+		callback(null, false);
+	}
 };
 
 HorizonAccessory.prototype.setOn = function(on,callback){
 	
-	toggle(this.ip, 5900);
+	toggle(this.ip, 5900, undefined, this.key);
 
 	callback(null);
 };
 
-function toggle(ip, port, timeout){
+function toggle(ip, port, timeout, key){
 	var timer;
         port = port || 5900;
         timeout = timeout || 300;
+	key = key || "E000";
         try {
                 var receivedVersion = false;
                 var receivedVersionOK = false;
                 var receivedAuthorizationOK = false;
                 var sendedToggle = false;
 
-                console.log("Try to connect to: "+ip+":"+port);
                 const client = net.createConnection(port, ip);
                 client.on('connect', function() {
                         clearTimeout(timer);
                         console.log("Socket connected!");
                 });
+
                 client.on('data', function(data) {
-                        console.log("Recveied Data: ");
-                        console.log(data.toString());
-                        console.log(data);
 
                         if(receivedVersion == false){
                                 client.write(data.toString());
-                                console.log("Version: "+data.toString());
-                                console.log("Send Version back");
 
                                 receivedVersion = true;
                                 return;
                         }
 
+			/*
+			if(receivedVersion && sendedToggle == false){
+				client.write(Buffer.from([0x01]));
+				
+				var keyBuffer = Buffer.from(key, 'hex');
+				
+				var bufferDown = Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                                bufferDown.writeInt8(keyBuffer.readInt8(0),6);
+                                bufferDown.writeInt8(keyBuffer.readInt8(1),7);
+                                console.log("BufferDown: ");
+                                console.log(bufferDown);
+
+                                var bufferUp = Buffer.from([0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+                                bufferUp.writeInt8(keyBuffer.readInt8(0),6);
+                                bufferUp.writeInt8(keyBuffer.readInt8(1),7);
+                                console.log(bufferUp);
+
+                                client.write(bufferDown);
+                                client.write(bufferUp);
+				setTimeout(function(){
+					client.end();
+				},100);
+				
+				sendedToggle = true;
+			}*/
+
                         if(receivedVersion && receivedVersionOK == false){
-                                console.log("Received Version OK. Length: "+data.length);
-
-                                var buffer = Buffer.from([0x01]);
-
-                                console.log(buffer);
-                                var written = client.write(buffer, function(){
-                                        console.log("test");
-                                });
-                                console.log("Written: "+written);
-                                //client.write(Buffer.from([0x00, 0x01]).toString());
-
+                                client.write(Buffer.from([0x01]));
                                 receivedVersionOK = true;
                                 return;
                         }
 			
 			if(receivedVersionOK && receivedAuthorizationOK == false){
-                                console.log("Received Authorization OK. Length: "+data.length);
 
                                 receivedAuthorizationOK = true;
                                 return;
                         }
 
                         if(receivedAuthorizationOK && sendedToggle == false){
+				
+				var keyBuffer = Buffer.from(key, 'hex');
+				console.log(keyBuffer);
+				//var test = Buffer.concat(Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00]), keyBuffer);
+				//console.log(test);
+					
+				var bufferDown = Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+				bufferDown.writeInt8(keyBuffer.readInt8(0),6);
+				bufferDown.writeInt8(keyBuffer.readInt8(1),7);
+				console.log("BufferDown: ");
+				console.log(bufferDown);
 
-                                client.write(Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x00]));
-                                client.write(Buffer.from([0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0xE0, 0x00]));
+				var bufferUp = Buffer.from([0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+				bufferUp.writeInt8(keyBuffer.readInt8(0),6);
+				bufferUp.writeInt8(keyBuffer.readInt8(1),7);
+				console.log(bufferUp);
+
+                                client.write(bufferDown);
+                                client.write(bufferUp);
                                 sended = true;
                                 client.end();
                         }
