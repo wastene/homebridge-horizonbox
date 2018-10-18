@@ -16,11 +16,6 @@ config.json sample:
 ```
 
 
-Default Values for config.json:
-name: 		"Led-Strip"
-brightness:	false		
-
-
 ## Other Information
 
 My Homepage:
