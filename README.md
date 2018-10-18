@@ -71,7 +71,7 @@ KEY_UNKNOWN_3 = EF17
 KEY_UNKNOWN_4 = EF19  
 KEY_ONDEMAND = EF28    
 KEY_DVR = EF29  
-KEY_TV = EF2a  
+KEY_TV = EF2A  
 
 ## Other Information
 
