@@ -122,27 +122,17 @@ function toggle(ip, port, timeout, key){
                         }
 
                         if(receivedAuthorizationOK && sendedToggle == false){
-				
-				var keyBuffer = Buffer.from(key, 'hex');
-				console.log(keyBuffer);
-				//var test = Buffer.concat(Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00]), keyBuffer);
-				//console.log(test);
-					
-				var bufferDown = Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-				bufferDown.writeInt8(keyBuffer.readInt8(0),6);
-				bufferDown.writeInt8(keyBuffer.readInt8(1),7);
-				console.log("BufferDown: ");
-				console.log(bufferDown);
-
-				var bufferUp = Buffer.from([0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
-				bufferUp.writeInt8(keyBuffer.readInt8(0),6);
-				bufferUp.writeInt8(keyBuffer.readInt8(1),7);
-				console.log(bufferUp);
-
-                                client.write(bufferDown);
-                                client.write(bufferUp);
-                                sended = true;
-                                client.end();
+								if (key instanceof Array) {
+									for (const k of key) {
+										send(key, client);
+										sended = true;
+										client.end();
+									}
+								}else {
+										send(key, client);
+										sended = true;
+										client.end();
+								}
                         }
                 });
 
@@ -162,3 +152,24 @@ function toggle(ip, port, timeout, key){
         }
 }
 
+function send(key, client) {
+		var keyBuffer = Buffer.from(key, 'hex');
+		console.log(keyBuffer);
+		//var test = Buffer.concat(Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00]), keyBuffer);
+		//console.log(test);
+			
+		var bufferDown = Buffer.from([0x04, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+		bufferDown.writeInt8(keyBuffer.readInt8(0),6);
+		bufferDown.writeInt8(keyBuffer.readInt8(1),7);
+		console.log("BufferDown: ");
+		console.log(bufferDown);
+
+		var bufferUp = Buffer.from([0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00]);
+		bufferUp.writeInt8(keyBuffer.readInt8(0),6);
+		bufferUp.writeInt8(keyBuffer.readInt8(1),7);
+		console.log(bufferUp);
+
+		client.write(bufferDown);
+		client.write(bufferUp);
+
+}
