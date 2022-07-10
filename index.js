@@ -51,8 +51,16 @@ HorizonAccessory.prototype.getOn = function(callback){
 };
 
 HorizonAccessory.prototype.setOn = function(on,callback){
-	
-	toggle(this.ip, 5900, undefined, this.key);
+
+	if (this.key instanceof Array) {
+		for (const i in this.key) {
+			setTimeout(function() {
+				toggle(this.ip, 5900, undefined, this.key[i]);	
+			}, 300 * i);
+		}
+	}else {
+		toggle(this.ip, 5900, undefined, this.key);
+	}
 
 	callback(null);
 };
